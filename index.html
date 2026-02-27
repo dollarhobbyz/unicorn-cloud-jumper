@@ -156,7 +156,7 @@ function tryFullscreen() {
 // Game state
 let game = {
   running: false, score: 0, highScore: 0, lives: 3,
-  speed: 2.2, speedIncrease: 0.00015, frameCount: 0,
+  speed: 2.2, baseSpeed: 2.2, frameCount: 0,
   groundY: H - 60
 };
 
@@ -719,27 +719,27 @@ function drawRainbow(rb) {
 }
 
 function spawnCloud() {
-  // Clouds sit on the ground — you MUST jump over them or get hurt!
-  const s = 0.6 + Math.random() * 0.4;
-  const cloudHeight = 25 * s;
+  // Clouds float randomly in the sky — touch them for points!
+  const minY = 40;
+  const maxY = game.groundY - 50;
   clouds.push({
     x: W + 60,
-    y: game.groundY - cloudHeight,
-    size: s,
-    speed: game.speed * (0.8 + Math.random() * 0.4),
+    y: minY + Math.random() * (maxY - minY),
+    size: 0.6 + Math.random() * 0.5,
+    speed: game.speed * (0.5 + Math.random() * 0.6),
     collected: false,
-    passed: false,
-    opacity: 0.9,
+    opacity: 0.85 + Math.random() * 0.15,
     points: 10
   });
 }
 
 function spawnRainbow() {
-  const h = 70 + Math.random() * 40;
+  // Rainbows sit low on the ground — you MUST jump over them!
+  const h = 45 + Math.random() * 25;
   rainbows.push({
     x: W + 20,
     y: game.groundY - h,
-    width: 50 + Math.random() * 20,
+    width: 40 + Math.random() * 20,
     height: h,
     speed: game.speed,
     passed: false
@@ -871,36 +871,22 @@ function checkCollisions() {
   const uw = unicorn.w - 20;
   const uh = unicorn.h - 10;
 
-  // Cloud obstacles — jump over them or get hurt!
+  // Cloud collection — fly into them for points!
   clouds.forEach(cloud => {
     if (cloud.collected) return;
     const s = cloud.size || 1;
     const cx = cloud.x;
     const cy = cloud.y;
-    const cr = 22 * s;
-
-    // Check collision
-    if (unicorn.invincible <= 0) {
-      const closestX = Math.max(ux, Math.min(cx, ux + uw));
-      const closestY = Math.max(uy, Math.min(cy, uy + uh));
-      const dx = cx - closestX;
-      const dy = cy - closestY;
-      if (dx * dx + dy * dy < cr * cr) {
-        cloud.collected = true;
-        game.lives--;
-        unicorn.invincible = 120;
-        unicorn.blinkTimer = 0;
-        addParticles(cloud.x, cloud.y, 15, ['#c8a2ff','#ff9ee7','#fff'], 6);
-        updateLivesDisplay();
-        if (game.lives <= 0) { gameOver(); }
-      }
-    }
-
-    // Score for jumping over a cloud
-    if (!cloud.passed && cloud.x + 30 * s < unicorn.x) {
-      cloud.passed = true;
+    const cr = 25 * s;
+    const closestX = Math.max(ux, Math.min(cx, ux + uw));
+    const closestY = Math.max(uy, Math.min(cy, uy + uh));
+    const dx = cx - closestX;
+    const dy = cy - closestY;
+    if (dx * dx + dy * dy < cr * cr) {
+      cloud.collected = true;
       game.score += cloud.points;
-      addScorePopup(unicorn.x + 30, unicorn.y - 10, `+${cloud.points}`, '#7bffcb');
+      addParticles(cloud.x, cloud.y, 12, ['#7bffcb','#ffdf6b','#c8a2ff','#fff'], 5);
+      addScorePopup(cloud.x, cloud.y - 20, `+${cloud.points}`, '#7bffcb');
       updateScoreDisplay();
     }
   });
@@ -1033,6 +1019,7 @@ function startGame() {
   game.score = 0;
   game.lives = 3;
   game.speed = 2.2;
+  game.baseSpeed = 2.2;
   game.frameCount = 0;
 
   unicorn.y = game.groundY;
@@ -1074,7 +1061,9 @@ let friendTimer = 0;
 function update() {
   if (!game.running) return;
   game.frameCount++;
-  game.speed += game.speedIncrease;
+  // Speed doubles every 60 seconds (3600 frames at 60fps), progressively
+  const seconds = game.frameCount / 60;
+  game.speed = game.baseSpeed * Math.pow(2, seconds / 60);
 
   // Unicorn physics
   unicorn.vy += unicorn.gravity;
@@ -1119,7 +1108,7 @@ function update() {
     cloudTimer = 0;
   }
 
-  if (rainbowTimer > 120 + Math.random() * 80) {
+  if (rainbowTimer > 70 + Math.random() * 50) {
     spawnRainbow();
     rainbowTimer = 0;
   }
