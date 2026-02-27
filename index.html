@@ -719,16 +719,17 @@ function drawRainbow(rb) {
 }
 
 function spawnCloud() {
-  // Most clouds spawn low — you MUST jump to collect them
-  const minY = game.groundY - 120;
-  const maxY = game.groundY - 10;
+  // Clouds sit on the ground — you MUST jump over them or get hurt!
+  const s = 0.6 + Math.random() * 0.4;
+  const cloudHeight = 25 * s;
   clouds.push({
     x: W + 60,
-    y: minY + Math.random() * (maxY - minY),
-    size: 0.7 + Math.random() * 0.5,
+    y: game.groundY - cloudHeight,
+    size: s,
     speed: game.speed * (0.8 + Math.random() * 0.4),
     collected: false,
-    opacity: 0.85 + Math.random() * 0.15,
+    passed: false,
+    opacity: 0.9,
     points: 10
   });
 }
@@ -870,22 +871,36 @@ function checkCollisions() {
   const uw = unicorn.w - 20;
   const uh = unicorn.h - 10;
 
-  // Cloud collection
+  // Cloud obstacles — jump over them or get hurt!
   clouds.forEach(cloud => {
     if (cloud.collected) return;
     const s = cloud.size || 1;
     const cx = cloud.x;
     const cy = cloud.y;
-    const cr = 25 * s;
-    const closestX = Math.max(ux, Math.min(cx, ux + uw));
-    const closestY = Math.max(uy, Math.min(cy, uy + uh));
-    const dx = cx - closestX;
-    const dy = cy - closestY;
-    if (dx * dx + dy * dy < cr * cr) {
-      cloud.collected = true;
+    const cr = 22 * s;
+
+    // Check collision
+    if (unicorn.invincible <= 0) {
+      const closestX = Math.max(ux, Math.min(cx, ux + uw));
+      const closestY = Math.max(uy, Math.min(cy, uy + uh));
+      const dx = cx - closestX;
+      const dy = cy - closestY;
+      if (dx * dx + dy * dy < cr * cr) {
+        cloud.collected = true;
+        game.lives--;
+        unicorn.invincible = 120;
+        unicorn.blinkTimer = 0;
+        addParticles(cloud.x, cloud.y, 15, ['#c8a2ff','#ff9ee7','#fff'], 6);
+        updateLivesDisplay();
+        if (game.lives <= 0) { gameOver(); }
+      }
+    }
+
+    // Score for jumping over a cloud
+    if (!cloud.passed && cloud.x + 30 * s < unicorn.x) {
+      cloud.passed = true;
       game.score += cloud.points;
-      addParticles(cloud.x, cloud.y, 12, ['#7bffcb','#ffdf6b','#c8a2ff','#fff'], 5);
-      addScorePopup(cloud.x, cloud.y - 20, `+${cloud.points}`, '#7bffcb');
+      addScorePopup(unicorn.x + 30, unicorn.y - 10, `+${cloud.points}`, '#7bffcb');
       updateScoreDisplay();
     }
   });
