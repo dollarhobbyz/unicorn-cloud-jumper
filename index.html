@@ -163,7 +163,7 @@ let game = {
 // Unicorn
 let unicorn = {
   x: 120, y: game.groundY, w: 60, h: 55,
-  vy: 0, gravity: 0.45, jumpPower: -14, doubleJumpPower: -12, tripleJumpPower: -11,
+  vy: 0, gravity: 0.3, jumpPower: -13, doubleJumpPower: -11, tripleJumpPower: -10,
   onGround: true, jumps: 0, maxJumps: 3,
   bobOffset: 0, sparkleTimer: 0,
   invincible: 0, blinkTimer: 0,
@@ -719,9 +719,9 @@ function drawRainbow(rb) {
 }
 
 function spawnCloud() {
-  // Clouds spawn in the lower-mid area where the unicorn actually jumps
-  const minY = game.groundY - 180;
-  const maxY = game.groundY - 40;
+  // Most clouds spawn low — you MUST jump to collect them
+  const minY = game.groundY - 120;
+  const maxY = game.groundY - 10;
   clouds.push({
     x: W + 60,
     y: minY + Math.random() * (maxY - minY),
