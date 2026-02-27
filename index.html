@@ -2,20 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="screen-orientation" content="landscape">
 <title>Unicorn Cloud Jumper!</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-touch-callout: none;
+  }
   body {
-    background: linear-gradient(180deg, #1a0533 0%, #2d1b69 30%, #4b2e83 60%, #7b4fa2 100%);
+    background: #0f0326;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden;
+    min-height: 100vh; min-height: 100dvh;
+    font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden;
     user-select: none; -webkit-user-select: none;
   }
   #gameContainer {
-    position: relative; width: 800px; height: 500px;
-    border-radius: 20px; overflow: hidden;
-    box-shadow: 0 0 40px rgba(200, 100, 255, 0.5), 0 0 80px rgba(150, 50, 255, 0.3);
+    position: relative;
+    width: 100vw; height: 100vh; height: 100dvh;
+    max-width: 100%; max-height: 100%;
+    overflow: hidden;
     cursor: pointer;
   }
   canvas { display: block; width: 100%; height: 100%; }
@@ -27,45 +38,55 @@
   }
   #gameOverScreen { display: none; }
   .gameTitle {
-    font-size: 52px; font-weight: 900;
+    font-size: clamp(28px, 7vw, 52px); font-weight: 900;
     background: linear-gradient(135deg, #ff9ee7, #ffdf6b, #7bffcb, #9e8bff, #ff9ee7);
     background-size: 300% 300%;
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: shimmer 3s ease-in-out infinite;
-    text-shadow: none; margin-bottom: 10px;
+    text-shadow: none; margin-bottom: 5px;
     text-align: center; line-height: 1.2;
   }
   @keyframes shimmer {
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
   }
-  .subtitle { color: #e0b0ff; font-size: 20px; margin-bottom: 30px; text-align: center; }
-  .instructions { color: #c8a0e8; font-size: 16px; margin-bottom: 8px; }
+  .subtitle { color: #e0b0ff; font-size: clamp(12px, 2.5vw, 20px); margin-bottom: 10px; text-align: center; padding: 0 10px; }
+  .instructions { color: #c8a0e8; font-size: clamp(11px, 2vw, 16px); margin-bottom: 4px; }
   .startBtn {
-    margin-top: 20px; padding: 16px 50px; font-size: 26px; font-weight: 700;
+    margin-top: 10px; padding: clamp(10px, 2vh, 16px) clamp(30px, 6vw, 50px);
+    font-size: clamp(18px, 3.5vw, 26px); font-weight: 700;
     border: none; border-radius: 50px; cursor: pointer; color: white;
     background: linear-gradient(135deg, #ff6bcd, #a855f7, #6366f1);
     box-shadow: 0 4px 20px rgba(168, 85, 247, 0.5);
     transition: transform 0.2s, box-shadow 0.2s;
     letter-spacing: 1px;
+    -webkit-tap-highlight-color: transparent;
   }
   .startBtn:hover { transform: scale(1.08); box-shadow: 0 6px 30px rgba(168, 85, 247, 0.7); }
-  #finalScore { font-size: 60px; color: #ffdf6b; font-weight: 900; margin: 10px 0; }
-  #finalStars { font-size: 30px; color: #ffd700; margin-bottom: 5px; }
-  #highScoreText { color: #7bffcb; font-size: 18px; margin-bottom: 15px; }
+  .startBtn:active { transform: scale(0.95); }
+  #finalScore { font-size: clamp(36px, 8vw, 60px); color: #ffdf6b; font-weight: 900; margin: 5px 0; }
+  #finalStars { font-size: clamp(20px, 4vw, 30px); color: #ffd700; margin-bottom: 3px; }
+  #highScoreText { color: #7bffcb; font-size: clamp(13px, 2.5vw, 18px); margin-bottom: 8px; }
   #scoreDisplay {
-    position: absolute; top: 15px; right: 20px; z-index: 5;
-    color: #fff; font-size: 24px; font-weight: 700;
+    position: absolute; top: 10px; right: 15px; z-index: 5;
+    color: #fff; font-size: clamp(16px, 3vw, 24px); font-weight: 700;
     text-shadow: 0 2px 8px rgba(0,0,0,0.5);
   }
   #livesDisplay {
-    position: absolute; top: 15px; left: 20px; z-index: 5;
-    font-size: 28px; text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    position: absolute; top: 10px; left: 15px; z-index: 5;
+    font-size: clamp(18px, 3.5vw, 28px); text-shadow: 0 2px 8px rgba(0,0,0,0.5);
   }
   .controls-hint {
-    color: #a080c0; font-size: 13px; margin-top: 15px;
-    text-align: center; line-height: 1.6;
+    color: #a080c0; font-size: clamp(10px, 1.8vw, 13px); margin-top: 8px;
+    text-align: center; line-height: 1.4;
+  }
+  /* Hide address bar hint for mobile */
+  @media (max-height: 500px) {
+    .controls-hint { display: none; }
+    .instructions { margin-bottom: 2px; }
+    .subtitle { margin-bottom: 6px; }
+    .startBtn { margin-top: 6px; }
   }
 </style>
 </head>
@@ -99,8 +120,38 @@
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+
+// Internal game resolution (all game logic uses these)
 const W = 800, H = 500;
 canvas.width = W; canvas.height = H;
+
+// Resize canvas to fill screen while keeping aspect ratio
+function resizeCanvas() {
+  const container = document.getElementById('gameContainer');
+  const screenW = window.innerWidth;
+  const screenH = window.innerHeight;
+  container.style.width = screenW + 'px';
+  container.style.height = screenH + 'px';
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => {
+  setTimeout(resizeCanvas, 100);
+  setTimeout(resizeCanvas, 300);
+});
+// Try to go fullscreen on first tap (mobile)
+let hasGoneFullscreen = false;
+function tryFullscreen() {
+  if (hasGoneFullscreen) return;
+  hasGoneFullscreen = true;
+  const el = document.documentElement;
+  if (el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  // Lock to landscape if possible
+  if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock('landscape').catch(()=>{});
+  }
+}
 
 // Game state
 let game = {
@@ -1168,15 +1219,32 @@ document.getElementById('gameContainer').addEventListener('touchstart', e => {
   }
 }, { passive: false });
 
+// Prevent all default touch behaviors (scroll, zoom, etc.)
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+
 document.getElementById('startBtn').addEventListener('click', e => {
   e.stopPropagation();
+  tryFullscreen();
   startGame();
 });
+document.getElementById('startBtn').addEventListener('touchend', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  tryFullscreen();
+  startGame();
+}, { passive: false });
 
 document.getElementById('restartBtn').addEventListener('click', e => {
   e.stopPropagation();
   startGame();
 });
+document.getElementById('restartBtn').addEventListener('touchend', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  startGame();
+}, { passive: false });
 
 // Start the loop
 gameLoop();
